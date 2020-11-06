@@ -23,6 +23,8 @@ main_surface = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 # изображения, ассеты и спрайты
 floor_image = pygame.image.load(os.path.join(img_folder,
                                              'floor_back.bmp'))
+ceil_image = pygame.image.load(os.path.join(img_folder,
+                                            'ceil_back.bmp'))
 player_image = pygame.image.load(os.path.join(img_folder,
                                               'player.bmp')).convert()
 player_image.set_colorkey((255, 255, 255))
@@ -30,6 +32,8 @@ player_image.set_colorkey((255, 255, 255))
 # создаём пол
 background_floor = background.Background(main_surface, floor_image, 5, 0,
                                          WIN_HEIGHT - FLOOR_HEIGHT)
+background_ceil = background.Background(main_surface, ceil_image, 5, 0,
+                                        0)
 
 # создаем играбельного персонажа
 player = player.Player(player_image, 10, WIN_WIDTH)
@@ -48,6 +52,7 @@ while True:
             sys.exit()
 
     background_floor.update()
+    background_ceil.update()
     main_surface.blit(player.image, player.rect)
     player.update()
 

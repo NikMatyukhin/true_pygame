@@ -4,9 +4,9 @@ import pygame
 class Player(pygame.sprite.Sprite):
     def __init__(self, image, ms, sw):
         super().__init__()
-        self.surface = pygame.Surface((50, 50))
+        self.surface = pygame.Surface((100, 100))
         self.image = image
-        self.rect = self.surface.get_rect(center=(100, 575))
+        self.rect = self.surface.get_rect(center=(100, 550))
 
         self.screen_width = sw
         self.moving_speed = ms
