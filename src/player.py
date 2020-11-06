@@ -8,6 +8,8 @@ class Player(pygame.sprite.Sprite):
         self.image = image
         self.rect = self.surface.get_rect(center=(100, 550))
 
+        self.BOTTOM = 600
+        self.PLAYER_LEVEL = self.BOTTOM - self.surface.get_height()
         self.screen_width = sw
         self.moving_speed = ms
         self.go_to_right = True
@@ -16,7 +18,7 @@ class Player(pygame.sprite.Sprite):
 
     def update(self):
         keys = pygame.key.get_pressed()
-        if self.rect.bottom == 600. and keys[pygame.K_UP]:
+        if self.rect.bottom == self.BOTTOM and keys[pygame.K_UP]:
             self.horizontal_impulse = False
             if keys[pygame.K_LEFT]:
                 self.horizontal_impulse = True
@@ -30,8 +32,8 @@ class Player(pygame.sprite.Sprite):
                 self.go_to_right = True
             self.vertical_impulse = -14.
         if self.vertical_impulse:
-            if self.rect.bottom + self.vertical_impulse > 600:
-                self.rect.y = 550.
+            if self.rect.bottom + self.vertical_impulse > self.BOTTOM:
+                self.rect.y = self.PLAYER_LEVEL
                 self.vertical_impulse = 0
             else:
                 if self.horizontal_impulse:
