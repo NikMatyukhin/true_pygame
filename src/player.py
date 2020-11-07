@@ -22,6 +22,7 @@ class Player(pygame.sprite.Sprite):
 
         if self.rect.bottom == self.floor:
             self.horizontal_impulse = False
+            self.vertical_impulse = 0
             if keys[pygame.K_UP]:
                 self.vertical_impulse = -14.0
 
