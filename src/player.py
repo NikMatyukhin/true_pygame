@@ -4,9 +4,9 @@ import pygame
 class Player(pygame.sprite.Sprite):
     def __init__(self, image, ms):
         super().__init__()
-        self.surface = pygame.Surface((100, 100))
+        self.surface = pygame.Surface((120, 200))
         self.image = image
-        self.rect = self.surface.get_rect(center=(100, 550))
+        self.rect = self.surface.get_rect(center=(200, 500))
 
         self.floor = 600
         self.player_level = self.floor - self.surface.get_height()

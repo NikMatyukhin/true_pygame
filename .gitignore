@@ -21,3 +21,6 @@ venv.bak/
 
 # pycharm settings
 .idea/
+
+# paint .net files
+src/assets/*.pdn
