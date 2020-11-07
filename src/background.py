@@ -40,5 +40,6 @@ class Background():
             if self.X2 <= -self.rect.width:
                 self.X2 = self.rect.width
                 self.second = (self.second + 2) % 13
+
         self.surface.blit(self.images[self.order[self.first]], (self.X1, self.Y1))
         self.surface.blit(self.images[self.order[self.second]], (self.X2, self.Y2))

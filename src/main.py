@@ -25,10 +25,9 @@ main_surface = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 # изображения, ассеты и спрайты
 floor_images = [pygame.image.load(os.path.join(img_folder, f'new_floor_back_{i}.png')) for i in range(1, 4)]
 ceil_images = [pygame.image.load(os.path.join(img_folder, f'new_ceil_back_{i}.png')) for i in range(1, 4)]
-player_image = pygame.image.load(os.path.join(img_folder, 'player.bmp')).convert()
-player_image.set_colorkey((255, 255, 255))
+player_image = pygame.image.load(os.path.join(img_folder, 'player_1.png')).convert_alpha()
 
-# создаём пол
+# создаём пол и задники
 background_floor = background.Background(main_surface, floor_images, 5, 0, WIN_HEIGHT - FLOOR_HEIGHT)
 background_ceil = background.Background(main_surface, ceil_images, 5, 0, 0)
 
