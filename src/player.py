@@ -81,7 +81,7 @@ class Player(pygame.sprite.Sprite):
                 self.vertical_impulse += 0.98
 
         # если внутри экрана и нажато влево
-        elif self.rect.left > 0 and keys[pygame.K_LEFT]:
+        elif self.rect.left >= 0 and keys[pygame.K_LEFT]:
             # двигаем влево и по надобности флипаем картинку
             self.rect.move_ip(-self.moving_speed, 0)
             if self.go_to_right:
@@ -89,7 +89,7 @@ class Player(pygame.sprite.Sprite):
             self.go_to_right = False
 
         # если внутри экрана и нажато вправо
-        elif self.rect.right < self.screen_width and keys[pygame.K_RIGHT]:
+        elif self.rect.right <= self.screen_width and keys[pygame.K_RIGHT]:
             # двигаем влево и по надобности флипаем картинку
             self.rect.move_ip(self.moving_speed, 0)
             if not self.go_to_right:
