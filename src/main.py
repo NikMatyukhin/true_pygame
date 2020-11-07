@@ -36,7 +36,7 @@ background_ceil = background.Background(main_surface, ceil_image, 5, 0,
                                         0)
 
 # создаем играбельного персонажа
-player = player.Player(player_image, 10, WIN_WIDTH)
+player = player.Player(player_image, 10)
 
 # создаем объект часов задержки
 fps_clock = pygame.time.Clock()
