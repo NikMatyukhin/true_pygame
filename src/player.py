@@ -22,7 +22,8 @@ class Player(pygame.sprite.Sprite):
         # проверка что мы стоим на полу и нажали клавишу вверх - начало прыжка
         if self.rect.bottom == self.floor and keys[pygame.K_UP]:
 
-            # зачем-то обнулили горизонтальный импульс, но ладно
+            # обнуляем горизонтальный импульс
+            # дабы не прыгать на месте в разные стороны
             self.horizontal_impulse = False
 
             # если прыгаем налево
@@ -41,6 +42,7 @@ class Player(pygame.sprite.Sprite):
 
             # уменьшение импульса... потому что ноль вверху, точно
             # FIXME: а почему 14?
+            # FIXME: Эмпирически выяснено, что это лучший прыжок
             self.vertical_impulse = -14.
 
         # если вертикальный импульс отличен от нуля
@@ -58,8 +60,8 @@ class Player(pygame.sprite.Sprite):
                     self.image = pygame.transform.flip(self.image, 1, 0)
                 self.go_to_right = True
 
-            # яблятьвахуе, это что за чудо? я умер и не понял, что это значит
-            if self.rect.bottom + self.vertical_impulse > self.floor:
+            # проверяем не перелетим ли мы пол
+            if int(self.rect.bottom + self.vertical_impulse) > self.floor:
                 self.rect.y = self.player_level
                 self.vertical_impulse = 0
             else:
