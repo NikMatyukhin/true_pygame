@@ -41,9 +41,8 @@ class Player(pygame.sprite.Sprite):
                 self.go_to_right = True
 
             # уменьшение импульса... потому что ноль вверху, точно
-            # FIXME: а почему 14?
             # FIXME: Эмпирически выяснено, что это лучший прыжок
-            self.vertical_impulse = -14.
+            self.vertical_impulse = -10.
 
         # если вертикальный импульс отличен от нуля
         # (скорее всего отрицательный)
