@@ -148,9 +148,9 @@ class Enemy(pygame.sprite.Sprite):
 class Boss(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
-        self.surface = pygame.Surface((300, 300))
+        self.surface = pygame.Surface((404, 438))
         self.all_images = [pygame.transform.scale(pygame.image.load(os.path.join(boss_folder, f'5g_tower_{i}.png')),
-                                                  (300, 300)).convert_alpha() for i in range(5)]
+                                                  (404, 438)).convert_alpha() for i in range(5)]
         print([im.get_width() for im in self.all_images])
         self.image = self.all_images[0]
         self.rect = self.surface.get_rect(center=(x, y))
@@ -167,7 +167,7 @@ class Boss(pygame.sprite.Sprite):
             self.kill()
         else:
             self.rect.move_ip(
-                self.moving_speed * randint(55, 155) if direction else -self.moving_speed * randint(55, 155), 0)
+                self.moving_speed * randint(45, 100) if direction else -self.moving_speed * randint(55, 155), 0)
 
     def update(self):
         global player
@@ -244,7 +244,7 @@ background_floor = Background(floor_images, 0, WIN_HEIGHT - FLOOR_HEIGHT)
 background_ceil = Background(ceil_images, 0, 0)
 player = Player()
 enemies = pygame.sprite.AbstractGroup()
-enemies.add(Boss(1300, 500))
+enemies.add(Boss(1300, 382))
 
 activity_distance = [3500, 3600, 6900, 7000, 9800, 10000, 13000, 13100, 17000]
 font = pygame.font.SysFont('arial', 36)
