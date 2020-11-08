@@ -44,6 +44,10 @@ class Player(pygame.sprite.Sprite):
         self.image = self.all_images[0]
         self.surface = pygame.Surface((self.image.get_width(), self.image.get_height()))
         self.rect = self.surface.get_rect(center=(400, 500))
+        self.right_hitbox = pygame.mask.from_surface(hit_img := pygame.image.load(os.path.join(img_folder, 'player_mop_hitbox.png')))
+        self.left_hitbox = pygame.mask.from_surface(pygame.transform.flip(hit_img, 1, 0))
+        self.right_attack_mask = pygame.mask.from_surface(atc_img := pygame.image.load(os.path.join(img_folder, 'player_mop_attack_mask.png')))
+        self.left_attack_mask = pygame.mask.from_surface(pygame.transform.flip(atc_img, 1, 0))
 
         self.floor = WIN_HEIGHT - FLOOR_HEIGHT
         self.player_level = self.floor - self.surface.get_height()
@@ -114,6 +118,12 @@ class Player(pygame.sprite.Sprite):
 
         main_surface.blit(self.image, self.rect)
 
+    def get_hitbox(self):
+        return self.right_hitbox if self.go_to_right else self.left_hitbox
+
+    def get_attack_mask(self):
+        return self.right_attack_mask if self.go_to_right else self.left_attack_mask
+
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -122,6 +132,8 @@ class Enemy(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(
             pygame.image.load(os.path.join(enemy_folder, 'police_cut.png')).convert_alpha(), (120, 200))
         self.rect = self.surface.get_rect(center=(x, y))
+        self.left_hitbox = pygame.mask.from_surface(self.image)
+        self.right_hitbox = pygame.mask.from_surface(pygame.transform.flip(self.image, 1, 0))
 
         self.moving_speed = 1
         self.go_to_right = False
@@ -154,6 +166,9 @@ class Enemy(pygame.sprite.Sprite):
             self.rect.move_ip(-background_ceil.moving_speed if direction
                               else background_ceil.moving_speed, 0)
 
+    def get_hitbox(self):
+        return self.right_hitbox if self.go_to_right else self.left_hitbox
+
 
 class Boss(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -164,6 +179,11 @@ class Boss(pygame.sprite.Sprite):
         print([im.get_width() for im in self.all_images])
         self.image = self.all_images[0]
         self.rect = self.surface.get_rect(center=(x, y))
+        self.left_hitbox = pygame.mask.from_surface(self.image)
+        self.right_hitbox = pygame.mask.from_surface(pygame.transform.flip(self.image, 1, 0))
+        self.left_attack_mask = pygame.mask.from_surface(atc_img := pygame.transform.scale(
+            pygame.image.load(os.path.join(boss_folder, '5g_tower_attack_mask.png')), (404, 438)))
+        self.right_attack_mask = pygame.mask.from_surface(pygame.transform.flip(atc_img, 1, 0))
 
         self.moving_speed = 1
         self.go_to_right = False
@@ -207,6 +227,12 @@ class Boss(pygame.sprite.Sprite):
         if motion:
             self.rect.move_ip(-background_ceil.moving_speed if direction
                               else background_ceil.moving_speed, 0)
+
+    def get_hitbox(self):
+        return self.right_hitbox if self.go_to_right else self.left_hitbox
+
+    def get_attack_mask(self):
+        return self.right_attack_mask if self.go_to_right else self.left_attack_mask
 
 
 class Background():
@@ -313,7 +339,10 @@ while True:
     hit_list = pygame.sprite.spritecollide(player, enemies, False)
     if hit_list and player.attack:
         for hitted in hit_list:
-            hitted.hit(player.go_to_right)
+            if hitted.get_hitbox().overlap_area(player.get_attack_mask(),
+                                          (player.rect.left-hitted.rect.left, player.rect.top-hitted.rect.top)):
+            # if pygame.sprite.collide_mask(hitted.hitbox, player.attack_mask):
+                hitted.hit(player.go_to_right)
 
     pygame.display.update()
 
