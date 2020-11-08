@@ -40,7 +40,8 @@ boss_images = [pygame.transform.scale(pygame.image.load(os.path.join(boss_folder
                                                   (404, 438)).convert_alpha() for i in range(5)]
 boss_attack_mask = pygame.transform.scale(
             pygame.image.load(os.path.join(boss_folder, '5g_tower_attack_mask.png')), (404, 438))
-boss_damage_indicator = None
+boss_damage_indicator = [pygame.transform.scale(pygame.image.load(os.path.join(boss_folder, f'{i}_hit_5g_tower.png')),
+                                                  (404, 438)).convert_alpha() for i in range(5)]
 
 fps_clock = pygame.time.Clock()
 
@@ -233,15 +234,18 @@ class Boss(pygame.sprite.Sprite):
         self.right_hitbox = pygame.mask.from_surface(pygame.transform.flip(self.image, 1, 0))
         self.left_attack_mask = pygame.mask.from_surface(boss_attack_mask)
         self.right_attack_mask = pygame.mask.from_surface(pygame.transform.flip(boss_attack_mask, 1, 0))
+        self.damage_indicator = boss_damage_indicator
 
         self.moving_speed = 8
         self.go_to_right = False
         self.hp = 30
+        self.damage = 0
         self.attack = False
         self.attack_moment = 0
 
     def hit(self, direction):
         self.hp -= 1
+        self.damage = 1
         if self.hp <= 0:
             self.kill()
         else:
@@ -269,6 +273,11 @@ class Boss(pygame.sprite.Sprite):
             if not self.attack_moment:
                 self.attack = False
         main_surface.blit(self.image, self.rect)
+        if self.damage:
+            main_surface.blit(self.damage_indicator[self.attack_moment // 2], self.rect)
+            self.damage += 1
+        if self.damage > 4:
+            self.damage = 0
 
     def move(self, direction, motion):
         if motion:
