@@ -33,7 +33,7 @@ fps_clock = pygame.time.Clock()
 pygame.mixer.music.load(os.path.join(music_folder, 'main_theme.mp3'))
 pygame.mixer.music.play(-1)
 moap = pygame.mixer.Sound(os.path.join(sound_folder, 'moap.wav'))
-
+pain = [pygame.mixer.Sound(os.path.join(sound_folder, f'oh{i}.wav')) for i in range (1, 5)]
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -134,19 +134,23 @@ class Enemy(pygame.sprite.Sprite):
         self.rect = self.surface.get_rect(center=(x, y))
         self.left_hitbox = pygame.mask.from_surface(self.image)
         self.right_hitbox = pygame.mask.from_surface(pygame.transform.flip(self.image, 1, 0))
+        self.damage_inicator = pygame.transform.scale(
+            pygame.image.load(os.path.join(enemy_folder, 'police_damage.png')).convert_alpha(), (120, 200))
 
-        self.moving_speed = 1
+        self.moving_speed = randint(2, 4)
         self.go_to_right = False
         self.hp = 7
         self.attack = False
+        self.damage = 0
 
     def hit(self, direction):
         self.hp -= 1
+        self.damage = 1
         if self.hp == 0:
             self.kill()
         else:
-            self.rect.move_ip(
-                self.moving_speed * randint(55, 155) if direction else -self.moving_speed * randint(55, 155), 0)
+            self.rect.move_ip(self.moving_speed * randint(5, 15) + 40 if direction else -self.moving_speed * randint(5, 15) + 40, 0)
+            pain[randint(0,3)].play()
 
     def update(self):
         if player.rect.centerx > self.rect.centerx:
@@ -160,6 +164,11 @@ class Enemy(pygame.sprite.Sprite):
                 self.image = pygame.transform.flip(self.image, 1, 0)
             self.go_to_right = False
         main_surface.blit(self.image, self.rect)
+        if self.damage: 
+            main_surface.blit(self.damage_inicator, self.rect)
+            self.damage += 1
+        if self.damage > 4:
+            self.damage = 0
 
     def move(self, direction, motion):
         if motion:
@@ -185,9 +194,9 @@ class Boss(pygame.sprite.Sprite):
             pygame.image.load(os.path.join(boss_folder, '5g_tower_attack_mask.png')), (404, 438)))
         self.right_attack_mask = pygame.mask.from_surface(pygame.transform.flip(atc_img, 1, 0))
 
-        self.moving_speed = 1
+        self.moving_speed = 8
         self.go_to_right = False
-        self.hp = 20
+        self.hp = 30
         self.attack = False
         self.attack_moment = 0
 
@@ -196,8 +205,7 @@ class Boss(pygame.sprite.Sprite):
         if self.hp <= 0:
             self.kill()
         else:
-            self.rect.move_ip(
-                self.moving_speed * randint(45, 100) if direction else -self.moving_speed * randint(55, 155), 0)
+            self.rect.move_ip(self.moving_speed * randint(5, 15) if direction else -self.moving_speed * randint(5, 15), 0)
 
     def update(self):
         global player
@@ -216,7 +224,6 @@ class Boss(pygame.sprite.Sprite):
             self.attack = True
         if self.attack:
             self.attack_moment = (self.attack_moment + 1) % 8
-            # if self.attack_moment == 2: moap.play()
             self.image = self.all_images[self.attack_moment // 2] if not self.go_to_right else pygame.transform.flip(
                 self.all_images[self.attack_moment // 2], 1, 0)
             if not self.attack_moment:
@@ -285,10 +292,10 @@ class Background():
 background_floor = Background(floor_images, 0, WIN_HEIGHT - FLOOR_HEIGHT)
 background_ceil = Background(ceil_images, 0, 0)
 player = Player()
-enemies = pygame.sprite.AbstractGroup()
-enemies.add(Boss(1300, 382))
 
-activity_distance = [3500, 3600, 6900, 7000, 9800, 10000, 13000, 13100, 17000]
+enemies = pygame.sprite.AbstractGroup()
+activity_distance = [3500, 3600, 6900, 7000, 9800, 10000, 13000, 13100, 18000] 
+
 font = pygame.font.SysFont('arial', 36)
 
 while True:
@@ -300,13 +307,11 @@ while True:
             if event.key == pygame.K_e:
                 player.start_attack()
 
-    if player.rect.left - player.moving_speed < 0 or player.rect.right + player.moving_speed > WIN_WIDTH:
+    if player.rect.left - player.moving_speed < 0 and DISTANCE > 400 or player.rect.right + player.moving_speed > WIN_WIDTH and DISTANCE < 20000:
         background_floor.move()
         background_ceil.move()
         keys = pygame.key.get_pressed()
-        # 0 - это движение противников вправо, а 1 - влево
         direction = bool(keys[pygame.K_RIGHT] or not keys[pygame.K_LEFT])
-        # Есть ли движение вообще
         motion = bool(keys[pygame.K_LEFT] or keys[pygame.K_RIGHT])
         for enemy in enemies:
             enemy.move(direction, motion)
@@ -314,9 +319,16 @@ while True:
     background_floor.update()
     background_ceil.update()
 
-    main_surface.blit(font.render(str(DISTANCE - 2 * (WIN_WIDTH - player.rect.centerx)), 1, (0, 0, 0)), (20, 20))
-    main_surface.blit(font.render(str(DISTANCE - 2 * (WIN_WIDTH - player.rect.centerx - 50)), 1, (0, 0, 0)), (100, 20))
-
+    if activity_distance:
+        if activity_distance[0] - DISTANCE < 200:
+            activity_distance.pop(0)
+            x, y = 1200, 500
+            if len(activity_distance) == 0:
+                enemies.add(Boss(x, y))
+                pygame.mixer.music.load(os.path.join(music_folder, 'boss_theme.mp3'))
+                pygame.mixer.music.play(-1)
+            else:
+                enemies.add(Enemy(x, y))
     for enemy in enemies:
         enemy.update()
 
@@ -330,11 +342,6 @@ while True:
 
     if 100 > absolute_pos > -160:
         main_surface.blit(trash, (50, 50))
-
-    # for enemy in enemies:
-    #    if pygame.sprite.collide_rect(player, enemy):
-    #        if player.attack:
-    #            enemy.hit(player.go_to_right)
 
     hit_list = pygame.sprite.spritecollide(player, enemies, False)
     if hit_list and player.attack:
