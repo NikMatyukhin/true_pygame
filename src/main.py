@@ -76,6 +76,7 @@ class Player(pygame.sprite.Sprite):
         self.go_to_right = True
         self.vertical_impulse = 0
         self.horizontal_impulse = False
+        self.locked = False
 
         self.hp = 20
         self.attack = False
@@ -108,7 +109,7 @@ class Player(pygame.sprite.Sprite):
             if int(self.rect.bottom + self.vertical_impulse) > self.floor:
                 self.rect.y = self.player_level
                 self.vertical_impulse = 0
-            elif self.horizontal_impulse:
+            elif not player.locked and self.horizontal_impulse:
                 if int(self.rect.left - self.moving_speed) < 0:
                     self.horizontal_impulse = False
                     self.rect.move_ip(self.moving_speed if self.go_to_right else 0, self.vertical_impulse)
@@ -122,10 +123,10 @@ class Player(pygame.sprite.Sprite):
                 self.rect.move_ip(0, self.vertical_impulse)
             self.vertical_impulse += 0.98
 
-        elif not self.go_to_right and self.rect.left > 0 and self.horizontal_impulse:
+        elif not player.locked and not self.go_to_right and self.rect.left > 0 and self.horizontal_impulse:
             self.rect.move_ip(-self.moving_speed, 0)
 
-        elif self.go_to_right and self.rect.right < WIN_WIDTH and self.horizontal_impulse:
+        elif not player.locked and self.go_to_right and self.rect.right < WIN_WIDTH and self.horizontal_impulse:
             self.rect.move_ip(self.moving_speed, 0)
 
         if self.attack:
@@ -368,7 +369,13 @@ while True:
             if event.key == pygame.K_e:
                 player.start_attack()
 
-    if player.rect.left - player.moving_speed < 0 and DISTANCE > 400 or player.rect.right + player.moving_speed > WIN_WIDTH and DISTANCE < 20000:
+    player.locked = False
+
+    if not enemies and 400 <= DISTANCE < 20000 and player.rect.left > 200 and player.rect.right < WIN_HEIGHT:
+        background_floor.move()
+        background_ceil.move()
+        player.locked = True
+    elif player.rect.left - player.moving_speed < 0 and DISTANCE > 400 or player.rect.right + player.moving_speed > WIN_WIDTH and DISTANCE < 20000:
         background_floor.move()
         background_ceil.move()
         keys = pygame.key.get_pressed()
