@@ -24,6 +24,7 @@ main_surface = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 
 floor_images = [pygame.image.load(os.path.join(img_folder, f'new_floor_back_{i}.png')) for i in range(1, 4)]
 ceil_images = [pygame.image.load(os.path.join(img_folder, f'new_ceil_back_{i}.png')) for i in range(1, 4)]
+hp_bar_img = pygame.image.load(os.path.join(img_folder, f'hpbar.png'))
 wanted = pygame.image.load(os.path.join(img_folder, f'разыскивается.png')).convert_alpha()
 trash = pygame.image.load(os.path.join(img_folder, f'урна.png')).convert_alpha()
 
@@ -40,7 +41,8 @@ boss_images = [pygame.transform.scale(pygame.image.load(os.path.join(boss_folder
                                                   (404, 438)).convert_alpha() for i in range(5)]
 boss_attack_mask = pygame.transform.scale(
             pygame.image.load(os.path.join(boss_folder, '5g_tower_attack_mask.png')), (404, 438))
-boss_damage_indicator = None
+boss_damage_indicator = [pygame.transform.scale(pygame.image.load(os.path.join(boss_folder, f'{i}_hit_5g_tower.png')),
+                                                  (404, 438)).convert_alpha() for i in range(5)]
 
 fps_clock = pygame.time.Clock()
 
@@ -48,6 +50,9 @@ pygame.mixer.music.load(os.path.join(music_folder, 'main_theme.mp3'))
 pygame.mixer.music.play(-1)
 moap = pygame.mixer.Sound(os.path.join(sound_folder, 'moap.wav'))
 pain = [pygame.mixer.Sound(os.path.join(sound_folder, f'oh{i}.wav')) for i in range (1, 5)]
+boss_pain = [pygame.mixer.Sound(os.path.join(sound_folder, f'boss_damage_{i}.wav')) for i in range (0, 2)]
+boss_hit = [pygame.mixer.Sound(os.path.join(sound_folder, f'boss_hit_{i}.wav')) for i in range (0, 2)]
+boss_death = pygame.mixer.Sound(os.path.join(sound_folder, f'boss_death.wav'))
 
 
 class Player(pygame.sprite.Sprite):
@@ -71,6 +76,7 @@ class Player(pygame.sprite.Sprite):
         self.go_to_right = True
         self.vertical_impulse = 0
         self.horizontal_impulse = False
+        self.locked = False
 
         self.hp = 20
         self.attack = False
@@ -103,7 +109,7 @@ class Player(pygame.sprite.Sprite):
             if int(self.rect.bottom + self.vertical_impulse) > self.floor:
                 self.rect.y = self.player_level
                 self.vertical_impulse = 0
-            elif self.horizontal_impulse:
+            elif not player.locked and self.horizontal_impulse:
                 if int(self.rect.left - self.moving_speed) < 0:
                     self.horizontal_impulse = False
                     self.rect.move_ip(self.moving_speed if self.go_to_right else 0, self.vertical_impulse)
@@ -117,10 +123,10 @@ class Player(pygame.sprite.Sprite):
                 self.rect.move_ip(0, self.vertical_impulse)
             self.vertical_impulse += 0.98
 
-        elif not self.go_to_right and self.rect.left > 0 and self.horizontal_impulse:
+        elif not player.locked and not self.go_to_right and self.rect.left > 0 and self.horizontal_impulse:
             self.rect.move_ip(-self.moving_speed, 0)
 
-        elif self.go_to_right and self.rect.right < WIN_WIDTH and self.horizontal_impulse:
+        elif not player.locked and self.go_to_right and self.rect.right < WIN_WIDTH and self.horizontal_impulse:
             self.rect.move_ip(self.moving_speed, 0)
 
         if self.attack:
@@ -233,19 +239,29 @@ class Boss(pygame.sprite.Sprite):
         self.right_hitbox = pygame.mask.from_surface(pygame.transform.flip(self.image, 1, 0))
         self.left_attack_mask = pygame.mask.from_surface(boss_attack_mask)
         self.right_attack_mask = pygame.mask.from_surface(pygame.transform.flip(boss_attack_mask, 1, 0))
+        self.damage_indicator = boss_damage_indicator
 
         self.moving_speed = 8
         self.go_to_right = False
         self.hp = 30
+        self.damage = 0
         self.attack = False
         self.attack_moment = 0
 
     def hit(self, direction):
         self.hp -= 1
+        self.damage = 1
         if self.hp <= 0:
             self.kill()
+            boss_death.play()
         else:
             self.rect.move_ip(self.moving_speed * randint(5, 15) if direction else -self.moving_speed * randint(5, 15), 0)
+            boss_pain[randint(0, 1)].play()
+
+    def start_attack(self):
+        self.attack = True
+        if (a := randint(0, 10)) < 2:
+            boss_hit[a].play()
 
     def update(self):
         global player
@@ -261,7 +277,7 @@ class Boss(pygame.sprite.Sprite):
             self.go_to_right = False
         if player.rect.left <= self.rect.left <= player.rect.right \
                 or player.rect.left <= self.rect.right <= player.rect.right:
-            self.attack = True
+            self.start_attack()
         if self.attack:
             self.attack_moment = (self.attack_moment + 1) % 8
             self.image = self.all_images[self.attack_moment // 2] if not self.go_to_right else pygame.transform.flip(
@@ -269,6 +285,11 @@ class Boss(pygame.sprite.Sprite):
             if not self.attack_moment:
                 self.attack = False
         main_surface.blit(self.image, self.rect)
+        if self.damage:
+            main_surface.blit(self.damage_indicator[self.attack_moment // 2], self.rect)
+            self.damage += 1
+        if self.damage > 4:
+            self.damage = 0
 
     def move(self, direction, motion):
         if motion:
@@ -348,7 +369,13 @@ while True:
             if event.key == pygame.K_e:
                 player.start_attack()
 
-    if player.rect.left - player.moving_speed < 0 and DISTANCE > 400 or player.rect.right + player.moving_speed > WIN_WIDTH and DISTANCE < 20000:
+    player.locked = False
+
+    if not enemies and 400 <= DISTANCE < 20000 and player.rect.left > 200 and player.rect.right < WIN_HEIGHT:
+        background_floor.move()
+        background_ceil.move()
+        player.locked = True
+    elif player.rect.left - player.moving_speed < 0 and DISTANCE > 400 or player.rect.right + player.moving_speed > WIN_WIDTH and DISTANCE < 20000:
         background_floor.move()
         background_ceil.move()
         keys = pygame.key.get_pressed()
@@ -397,6 +424,11 @@ while True:
             if hitter.attack and hitter.get_attack_mask().overlap_area(player.get_hitbox(),
                                           (player.rect.left-hitter.rect.left, player.rect.top-hitter.rect.top)):
                 player.hit(hitter.go_to_right)
+
+    # hp bar
+    main_surface.blit(hp_bar_img, (10, 10))
+    if player.hp > 0:
+        pygame.draw.rect(main_surface, (240, 10, 10), (13, 13, int(player.hp/20 * 244), 10))
 
     # Отрисовка времени в правом верхнем углу
     time = pygame.time.get_ticks()
