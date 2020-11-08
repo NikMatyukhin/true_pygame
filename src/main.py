@@ -1,5 +1,7 @@
 import os
 import sys
+from typing import List
+
 import pygame
 from random import randint
 
@@ -12,6 +14,7 @@ DISTANCE = 400
 game_folder = os.path.dirname(__file__)
 img_folder = os.path.join(game_folder, 'assets')
 enemy_folder = os.path.join(img_folder, 'enemies')
+boss_folder = os.path.join(img_folder, '5g_tower')
 sound_folder = os.path.join(game_folder, 'sounds')
 music_folder = os.path.join(game_folder, 'music')
 
@@ -117,6 +120,7 @@ class Enemy(pygame.sprite.Sprite):
         self.moving_speed = 1
         self.go_to_right = False
         self.hp = 7
+        self.attack = False
 
     def hit(self, direction):
         self.hp -= 1
@@ -125,17 +129,65 @@ class Enemy(pygame.sprite.Sprite):
         else:
             self.rect.move_ip(self.moving_speed * randint(55, 155) if direction else -self.moving_speed * randint(55, 155), 0)
 
-    def update(self, px, py):
-        if px > self.rect.centerx:
+    def update(self):
+        if player.rect.centerx > self.rect.centerx:
             self.rect.move_ip(self.moving_speed, 0)
             if not self.go_to_right:
                 self.image = pygame.transform.flip(self.image, 1, 0)
             self.go_to_right = True
-        elif px < self.rect.centerx:
+        elif player.rect.centerx < self.rect.centerx:
             self.rect.move_ip(-self.moving_speed, 0)
             if self.go_to_right:
                 self.image = pygame.transform.flip(self.image, 1, 0)
             self.go_to_right = False
+        main_surface.blit(self.image, self.rect)
+
+
+class Boss(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.surface = pygame.Surface((300, 300))
+        self.all_images = [pygame.transform.scale(pygame.image.load(os.path.join(boss_folder, f'5g_tower_{i}.png')),
+                                                  (300, 300)).convert_alpha() for i in range(5)]
+        print([im.get_width() for im in self.all_images])
+        self.image = self.all_images[0]
+        self.rect = self.surface.get_rect(center=(x, y))
+
+        self.moving_speed = 1
+        self.go_to_right = False
+        self.hp = 20
+        self.attack = False
+        self.attack_moment = 0
+
+    def hit(self, direction):
+        self.hp -= 1
+        if self.hp <= 0:
+            self.kill()
+        else:
+            self.rect.move_ip(
+                self.moving_speed * randint(55, 155) if direction else -self.moving_speed * randint(55, 155), 0)
+
+    def update(self):
+        global player
+        if player.rect.centerx > self.rect.centerx:
+            self.rect.move_ip(self.moving_speed, 0)
+            if not self.go_to_right:
+                self.image = pygame.transform.flip(self.image, 1, 0)
+            self.go_to_right = True
+        elif player.rect.centerx < self.rect.centerx:
+            self.rect.move_ip(-self.moving_speed, 0)
+            if self.go_to_right:
+                self.image = pygame.transform.flip(self.image, 1, 0)
+            self.go_to_right = False
+        if player.rect.left <= self.rect.left <= player.rect.right \
+            or player.rect.left <= self.rect.right <= player.rect.right:
+            self.attack = True
+        if self.attack:
+            self.attack_moment = (self.attack_moment + 1) % 8
+            # if self.attack_moment == 2: moap.play()
+            self.image = self.all_images[self.attack_moment//2] if not self.go_to_right else pygame.transform.flip(self.all_images[self.attack_moment//2], 1, 0)
+            if not self.attack_moment:
+                self.attack = False
         main_surface.blit(self.image, self.rect)
 
 
@@ -189,6 +241,8 @@ class Background():
 background_floor = Background(floor_images, 0, WIN_HEIGHT - FLOOR_HEIGHT)
 background_ceil = Background(ceil_images, 0, 0)
 player = Player()
+enemies = pygame.sprite.AbstractGroup()
+enemies.add(Boss(1300, 500))
 
 activity_distance = []
 font = pygame.font.SysFont('arial', 36)
@@ -215,8 +269,8 @@ while True:
 
     main_surface.blit(font.render(str(DISTANCE), 1, (0, 0, 0)), (20, 20))
 
-    #for enemy in enemies:
-    #    enemy.update(player.rect.centerx, player.rect.centery)
+    for enemy in enemies:
+        enemy.update()
 
     player.update()
 
@@ -225,10 +279,15 @@ while True:
     if 6180 > DISTANCE - 2 * (WIN_WIDTH - player.rect.centerx - dir) > 6040:
         main_surface.blit(font.render('картинка', 1, (0, 0, 0)), (20, 50))
 
-    #hit_list = pygame.sprite.spritecollide(player, enemies, False)
-    #if hit_list and player.attack:
-    #    for hitted in hit_list:
-    #        hitted.hit(player.go_to_right)
+    #for enemy in enemies:
+    #    if pygame.sprite.collide_rect(player, enemy):
+    #        if player.attack:
+    #            enemy.hit(player.go_to_right)
+
+    hit_list = pygame.sprite.spritecollide(player, enemies, False)
+    if hit_list and player.attack:
+       for hitted in hit_list:
+            hitted.hit(player.go_to_right)
 
     pygame.display.update()
 
