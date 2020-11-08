@@ -192,6 +192,7 @@ player = Player()
 
 activity_distance = []
 font = pygame.font.SysFont('arial', 36)
+text = font.render(str(DISTANCE) + str(player.rect.centerx) + str(WIN_WIDTH), 1, (0, 0, 0)) 
 
 while True:
     for event in pygame.event.get():
@@ -201,6 +202,9 @@ while True:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_e:
                 player.start_attack()
+            if event.key == pygame.K_q:
+                text = font.render(str(DISTANCE) + str(player.rect.centerx) + str(WIN_WIDTH), 1, (0, 0, 0))
+
 
     if player.rect.left - player.moving_speed < 0 or player.rect.right + player.moving_speed > WIN_WIDTH:
         background_floor.move()
@@ -213,9 +217,14 @@ while True:
 
     #for enemy in enemies:
     #    enemy.update(player.rect.centerx, player.rect.centery)
-    
+
     player.update()
-    
+
+    dir = 0 if player.go_to_right else 100
+
+    if 6180 > DISTANCE - 2 * (WIN_WIDTH - player.rect.centerx - dir) > 6040:
+        main_surface.blit(font.render('картинка', 1, (0, 0, 0)), (20, 50))
+
     #hit_list = pygame.sprite.spritecollide(player, enemies, False)
     #if hit_list and player.attack:
     #    for hitted in hit_list:
