@@ -26,4 +26,10 @@ venv.bak/
 src/assets/*.pdn
 
 # our shit
-/src/screenshot.jpg
+src/screenshot.jpg
+
+# zip archives
+*.7z
+
+# build directory
+SeinKampf/

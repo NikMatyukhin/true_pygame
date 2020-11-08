@@ -1,7 +1,5 @@
 import os
 import sys
-from typing import List
-
 import pygame
 from random import randint
 
@@ -78,7 +76,7 @@ class Player(pygame.sprite.Sprite):
         self.floor = WIN_HEIGHT - FLOOR_HEIGHT
         self.player_level = self.floor - self.surface.get_height()
 
-        self.hp = 20
+        self.hp = 100
         self.moving_speed = 8
         self.go_to_right = True
         self.vertical_impulse = 0
