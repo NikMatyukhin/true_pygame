@@ -27,6 +27,21 @@ ceil_images = [pygame.image.load(os.path.join(img_folder, f'new_ceil_back_{i}.pn
 wanted = pygame.image.load(os.path.join(img_folder, f'разыскивается.png')).convert_alpha()
 trash = pygame.image.load(os.path.join(img_folder, f'урна.png')).convert_alpha()
 
+# предзагрузка ресурсов полицейских
+policeman_images = [pygame.transform.scale(pygame.image.load(os.path.join(enemy_folder, f'police_{i}_frame.png')),
+                                           (174, 200)).convert_alpha() for i in range(9)]
+policeman_attack_mask_image = pygame.transform.scale(
+            pygame.image.load(os.path.join(enemy_folder, 'police_attack_mask.png')), (174, 200))
+policeman_damage_indicator = pygame.transform.scale(
+            pygame.image.load(os.path.join(enemy_folder, 'police_damage.png')).convert_alpha(), (174, 200))
+
+# предзагрузка ресурсов босса
+boss_images = [pygame.transform.scale(pygame.image.load(os.path.join(boss_folder, f'5g_tower_{i}.png')),
+                                                  (404, 438)).convert_alpha() for i in range(5)]
+boss_attack_mask = pygame.transform.scale(
+            pygame.image.load(os.path.join(boss_folder, '5g_tower_attack_mask.png')), (404, 438))
+boss_damage_indicator = None
+
 fps_clock = pygame.time.Clock()
 
 pygame.mixer.music.load(os.path.join(music_folder, 'main_theme.mp3'))
@@ -138,18 +153,15 @@ class Enemy(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
         self.surface = pygame.Surface((174, 200))
-        self.all_images = [pygame.transform.scale(pygame.image.load(os.path.join(enemy_folder, f'police_{i}_frame.png')),
-                                                  (174, 200)).convert_alpha() for i in range(9)]
+        self.all_images = policeman_images
         print([im.get_width() for im in self.all_images])
         self.image = self.all_images[0]
         self.rect = self.surface.get_rect(center=(x, y))
         self.left_hitbox = pygame.mask.from_surface(self.image)
         self.right_hitbox = pygame.mask.from_surface(pygame.transform.flip(self.image, 1, 0))
-        self.left_attack_mask = pygame.mask.from_surface(atc_img := pygame.transform.scale(
-            pygame.image.load(os.path.join(enemy_folder, 'police_attack_mask.png')), (174, 200)))
-        self.right_attack_mask = pygame.mask.from_surface(pygame.transform.flip(atc_img, 1, 0))
-        self.damage_indicator = pygame.transform.scale(
-            pygame.image.load(os.path.join(enemy_folder, 'police_damage.png')).convert_alpha(), (174, 200))
+        self.left_attack_mask = pygame.mask.from_surface(policeman_attack_mask_image)
+        self.right_attack_mask = pygame.mask.from_surface(pygame.transform.flip(policeman_attack_mask_image, 1, 0))
+        self.damage_indicator = policeman_damage_indicator
 
         self.moving_speed = randint(2, 4)
         self.go_to_right = False
@@ -213,16 +225,14 @@ class Boss(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
         self.surface = pygame.Surface((404, 438))
-        self.all_images = [pygame.transform.scale(pygame.image.load(os.path.join(boss_folder, f'5g_tower_{i}.png')),
-                                                  (404, 438)).convert_alpha() for i in range(5)]
+        self.all_images = boss_images
         print([im.get_width() for im in self.all_images])
         self.image = self.all_images[0]
         self.rect = self.surface.get_rect(center=(x, y))
         self.left_hitbox = pygame.mask.from_surface(self.image)
         self.right_hitbox = pygame.mask.from_surface(pygame.transform.flip(self.image, 1, 0))
-        self.left_attack_mask = pygame.mask.from_surface(atc_img := pygame.transform.scale(
-            pygame.image.load(os.path.join(boss_folder, '5g_tower_attack_mask.png')), (404, 438)))
-        self.right_attack_mask = pygame.mask.from_surface(pygame.transform.flip(atc_img, 1, 0))
+        self.left_attack_mask = pygame.mask.from_surface(boss_attack_mask)
+        self.right_attack_mask = pygame.mask.from_surface(pygame.transform.flip(boss_attack_mask, 1, 0))
 
         self.moving_speed = 8
         self.go_to_right = False
