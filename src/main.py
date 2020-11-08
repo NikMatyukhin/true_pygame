@@ -134,7 +134,7 @@ class Enemy(pygame.sprite.Sprite):
         self.rect = self.surface.get_rect(center=(x, y))
         self.left_hitbox = pygame.mask.from_surface(self.image)
         self.right_hitbox = pygame.mask.from_surface(pygame.transform.flip(self.image, 1, 0))
-        self.damage_inicator = pygame.transform.scale(
+        self.damage_indicator = pygame.transform.scale(
             pygame.image.load(os.path.join(enemy_folder, 'police_damage.png')).convert_alpha(), (120, 200))
 
         self.moving_speed = randint(2, 4)
@@ -149,23 +149,25 @@ class Enemy(pygame.sprite.Sprite):
         if self.hp == 0:
             self.kill()
         else:
-            self.rect.move_ip(self.moving_speed * randint(5, 15) + 40 if direction else -self.moving_speed * randint(5, 15) + 40, 0)
-            pain[randint(0,3)].play()
+            self.rect.move_ip(self.moving_speed * randint(5, 15) + 40 if direction else -self.moving_speed * randint(5, 15) - 40, 0)
+            pain[randint(0, 3)].play()
 
     def update(self):
         if player.rect.centerx > self.rect.centerx:
             self.rect.move_ip(self.moving_speed, 0)
             if not self.go_to_right:
                 self.image = pygame.transform.flip(self.image, 1, 0)
+                self.damage_indicator = pygame.transform.flip(self.damage_indicator, 1, 0)
             self.go_to_right = True
         elif player.rect.centerx < self.rect.centerx:
             self.rect.move_ip(-self.moving_speed, 0)
             if self.go_to_right:
                 self.image = pygame.transform.flip(self.image, 1, 0)
+                self.damage_indicator = pygame.transform.flip(self.damage_indicator, 1, 0)
             self.go_to_right = False
         main_surface.blit(self.image, self.rect)
         if self.damage: 
-            main_surface.blit(self.damage_inicator, self.rect)
+            main_surface.blit(self.damage_indicator, self.rect)
             self.damage += 1
         if self.damage > 4:
             self.damage = 0
@@ -324,7 +326,7 @@ while True:
             activity_distance.pop(0)
             x, y = 1200, 500
             if len(activity_distance) == 0:
-                enemies.add(Boss(x, y))
+                enemies.add(Boss(x, 381))
                 pygame.mixer.music.load(os.path.join(music_folder, 'boss_theme.mp3'))
                 pygame.mixer.music.play(-1)
             else:
@@ -348,7 +350,6 @@ while True:
         for hitted in hit_list:
             if hitted.get_hitbox().overlap_area(player.get_attack_mask(),
                                           (player.rect.left-hitted.rect.left, player.rect.top-hitted.rect.top)):
-            # if pygame.sprite.collide_mask(hitted.hitbox, player.attack_mask):
                 hitted.hit(player.go_to_right)
 
     pygame.display.update()
