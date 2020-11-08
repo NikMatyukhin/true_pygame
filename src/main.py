@@ -33,7 +33,7 @@ fps_clock = pygame.time.Clock()
 pygame.mixer.music.load(os.path.join(music_folder, 'main_theme.mp3'))
 pygame.mixer.music.play(-1)
 moap = pygame.mixer.Sound(os.path.join(sound_folder, 'moap.wav'))
-
+pain = [pygame.mixer.Sound(os.path.join(sound_folder, f'oh{i}.wav')) for i in range (1, 5)]
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -122,19 +122,23 @@ class Enemy(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(
             pygame.image.load(os.path.join(enemy_folder, 'police_cut.png')).convert_alpha(), (120, 200))
         self.rect = self.surface.get_rect(center=(x, y))
+        self.damage_inicator = pygame.transform.scale(
+            pygame.image.load(os.path.join(enemy_folder, 'police_damage.png')).convert_alpha(), (120, 200))
 
-        self.moving_speed = 8
+        self.moving_speed = randint(2, 4)
         self.go_to_right = False
         self.hp = 7
         self.attack = False
+        self.damage = 0
 
     def hit(self, direction):
         self.hp -= 1
+        self.damage = 1
         if self.hp == 0:
             self.kill()
         else:
             self.rect.move_ip(self.moving_speed * randint(5, 15) + 40 if direction else -self.moving_speed * randint(5, 15) + 40, 0)
-
+            pain[randint(0,3)].play()
 
     def update(self):
         if player.rect.centerx > self.rect.centerx:
@@ -148,6 +152,11 @@ class Enemy(pygame.sprite.Sprite):
                 self.image = pygame.transform.flip(self.image, 1, 0)
             self.go_to_right = False
         main_surface.blit(self.image, self.rect)
+        if self.damage: 
+            main_surface.blit(self.damage_inicator, self.rect)
+            self.damage += 1
+        if self.damage > 4:
+            self.damage = 0
 
     def move(self, direction, motion):
         if motion:
@@ -178,7 +187,6 @@ class Boss(pygame.sprite.Sprite):
         else:
             self.rect.move_ip(self.moving_speed * randint(5, 15) if direction else -self.moving_speed * randint(5, 15), 0)
 
-
     def update(self):
         global player
         if player.rect.centerx > self.rect.centerx:
@@ -196,7 +204,6 @@ class Boss(pygame.sprite.Sprite):
             self.attack = True
         if self.attack:
             self.attack_moment = (self.attack_moment + 1) % 8
-            # if self.attack_moment == 2: moap.play()
             self.image = self.all_images[self.attack_moment // 2] if not self.go_to_right else pygame.transform.flip(
                 self.all_images[self.attack_moment // 2], 1, 0)
             if not self.attack_moment:
@@ -278,9 +285,7 @@ while True:
         background_floor.move()
         background_ceil.move()
         keys = pygame.key.get_pressed()
-        # 0 - это движение противников вправо, а 1 - влево
         direction = bool(keys[pygame.K_RIGHT] or not keys[pygame.K_LEFT])
-        # Есть ли движение вообще
         motion = bool(keys[pygame.K_LEFT] or keys[pygame.K_RIGHT])
         for enemy in enemies:
             enemy.move(direction, motion)
