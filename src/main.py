@@ -22,6 +22,8 @@ main_surface = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 floor_images = [pygame.image.load(os.path.join(img_folder, f'new_floor_back_{i}.png')) for i in range(1, 4)]
 ceil_images = [pygame.image.load(os.path.join(img_folder, f'new_ceil_back_{i}.png')) for i in range(1, 4)]
 police_enemy_image = pygame.image.load(os.path.join(enemy_folder, 'police_cut.png')).convert_alpha()
+wanted = pygame.image.load(os.path.join(img_folder, f'разыскивается.png')).convert_alpha()
+trash = pygame.image.load(os.path.join(img_folder, f'урна.png')).convert_alpha()
 
 fps_clock = pygame.time.Clock()
 
@@ -190,9 +192,8 @@ background_floor = Background(floor_images, 0, WIN_HEIGHT - FLOOR_HEIGHT)
 background_ceil = Background(ceil_images, 0, 0)
 player = Player()
 
-activity_distance = []
+activity_distance = [3500, 3600, 6900, 7000, 9800, 10000, 13000, 13100, 17000]
 font = pygame.font.SysFont('arial', 36)
-text = font.render(str(DISTANCE) + str(player.rect.centerx) + str(WIN_WIDTH), 1, (0, 0, 0)) 
 
 while True:
     for event in pygame.event.get():
@@ -202,9 +203,6 @@ while True:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_e:
                 player.start_attack()
-            if event.key == pygame.K_q:
-                text = font.render(str(DISTANCE) + str(player.rect.centerx) + str(WIN_WIDTH), 1, (0, 0, 0))
-
 
     if player.rect.left - player.moving_speed < 0 or player.rect.right + player.moving_speed > WIN_WIDTH:
         background_floor.move()
@@ -213,17 +211,22 @@ while True:
     background_floor.update()
     background_ceil.update()
 
-    main_surface.blit(font.render(str(DISTANCE), 1, (0, 0, 0)), (20, 20))
+    main_surface.blit(font.render(str(DISTANCE - 2 * (WIN_WIDTH - player.rect.centerx)), 1, (0, 0, 0)), (20, 20))
+    main_surface.blit(font.render(str(DISTANCE - 2 * (WIN_WIDTH - player.rect.centerx - 50)), 1, (0, 0, 0)), (100, 20))
 
     #for enemy in enemies:
     #    enemy.update(player.rect.centerx, player.rect.centery)
 
     player.update()
 
-    dir = 0 if player.go_to_right else 100
+    dir = 0 if player.go_to_right else 50
+    absolute_pos = DISTANCE - 2 * (WIN_WIDTH - player.rect.centerx - dir)
 
-    if 6180 > DISTANCE - 2 * (WIN_WIDTH - player.rect.centerx - dir) > 6040:
-        main_surface.blit(font.render('картинка', 1, (0, 0, 0)), (20, 50))
+    if 6200 > absolute_pos > 6000:
+        main_surface.blit(wanted, (50, 50))
+
+    if 100 > absolute_pos > -160:
+        main_surface.blit(trash, (50, 50))
 
     #hit_list = pygame.sprite.spritecollide(player, enemies, False)
     #if hit_list and player.attack:
