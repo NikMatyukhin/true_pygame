@@ -57,6 +57,7 @@ class Player(pygame.sprite.Sprite):
         self.vertical_impulse = 0
         self.horizontal_impulse = False
 
+        self.hp = 20
         self.attack = False
         self.attack_moment = 0
 
@@ -118,6 +119,14 @@ class Player(pygame.sprite.Sprite):
 
         main_surface.blit(self.image, self.rect)
 
+    def hit(self, direction):
+        self.hp -= 1
+        if self.hp <= 0:
+            print("Your dead")
+            # self.kill()e
+        else:
+            self.rect.move_ip(self.moving_speed * randint(1, 5) if direction else -self.moving_speed * randint(1, 5), 0)
+
     def get_hitbox(self):
         return self.right_hitbox if self.go_to_right else self.left_hitbox
 
@@ -128,16 +137,19 @@ class Player(pygame.sprite.Sprite):
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
-        self.surface = pygame.Surface((120, 200))
-        self.all_images = [pygame.transform.scale(pygame.image.load(os.path.join(enemy_folder, f'police_cut_{i}.png')),
-                                                  (120, 200)).convert_alpha() for i in range(1)]
+        self.surface = pygame.Surface((174, 200))
+        self.all_images = [pygame.transform.scale(pygame.image.load(os.path.join(enemy_folder, f'police_{i}_frame.png')),
+                                                  (174, 200)).convert_alpha() for i in range(9)]
         print([im.get_width() for im in self.all_images])
         self.image = self.all_images[0]
         self.rect = self.surface.get_rect(center=(x, y))
         self.left_hitbox = pygame.mask.from_surface(self.image)
         self.right_hitbox = pygame.mask.from_surface(pygame.transform.flip(self.image, 1, 0))
+        self.left_attack_mask = pygame.mask.from_surface(atc_img := pygame.transform.scale(
+            pygame.image.load(os.path.join(enemy_folder, 'police_attack_mask.png')), (174, 200)))
+        self.right_attack_mask = pygame.mask.from_surface(pygame.transform.flip(atc_img, 1, 0))
         self.damage_indicator = pygame.transform.scale(
-            pygame.image.load(os.path.join(enemy_folder, 'police_damage.png')).convert_alpha(), (120, 200))
+            pygame.image.load(os.path.join(enemy_folder, 'police_damage.png')).convert_alpha(), (174, 200))
 
         self.moving_speed = randint(2, 4)
         self.go_to_right = False
@@ -173,9 +185,9 @@ class Enemy(pygame.sprite.Sprite):
         elif not self.go_to_right and player.rect.left <= self.rect.left <= player.rect.right:
             self.attack = True
         if self.attack:
-            self.attack_moment = (self.attack_moment + 1) % 1
-            self.image = self.all_images[self.attack_moment // 2] if not self.go_to_right else pygame.transform.flip(
-                self.all_images[self.attack_moment // 2], 1, 0)
+            self.attack_moment = (self.attack_moment + 1) % 8
+            self.image = self.all_images[self.attack_moment] if not self.go_to_right else pygame.transform.flip(
+                self.all_images[self.attack_moment], 1, 0)
             if not self.attack_moment:
                 self.attack = False
         main_surface.blit(self.image, self.rect)
@@ -192,6 +204,9 @@ class Enemy(pygame.sprite.Sprite):
 
     def get_hitbox(self):
         return self.right_hitbox if self.go_to_right else self.left_hitbox
+
+    def get_attack_mask(self):
+        return self.right_attack_mask if self.go_to_right else self.left_attack_mask
 
 
 class Boss(pygame.sprite.Sprite):
@@ -365,6 +380,13 @@ while True:
             if hitted.get_hitbox().overlap_area(player.get_attack_mask(),
                                           (player.rect.left-hitted.rect.left, player.rect.top-hitted.rect.top)):
                 hitted.hit(player.go_to_right)
+
+    hit_list = pygame.sprite.spritecollide(player, enemies, False)
+    if hit_list:
+        for hitter in hit_list:
+            if hitter.attack and hitter.get_attack_mask().overlap_area(player.get_hitbox(),
+                                          (player.rect.left-hitter.rect.left, player.rect.top-hitter.rect.top)):
+                player.hit(hitter.go_to_right)
 
     # Отрисовка времени в правом верхнем углу
     time = pygame.time.get_ticks()
