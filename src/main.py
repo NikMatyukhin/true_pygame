@@ -10,6 +10,8 @@ WIN_HEIGHT = 700
 WIN_WIDTH = 1200
 FLOOR_HEIGHT = 100
 DISTANCE = 400
+CURRENT_TIME = None
+KILLS = 0
 
 game_folder = os.path.dirname(__file__)
 img_folder = os.path.join(game_folder, 'assets')
@@ -33,7 +35,11 @@ pygame.mixer.music.load(os.path.join(music_folder, 'main_theme.mp3'))
 pygame.mixer.music.play(-1)
 moap = pygame.mixer.Sound(os.path.join(sound_folder, 'moap.wav'))
 pain = [pygame.mixer.Sound(os.path.join(sound_folder, f'oh{i}.wav')) for i in range (1, 5)]
+activity_distance = [3500, 3600, 6900, 7000, 9800, 10000, 13000, 13100, 18000] 
 
+font = pygame.font.SysFont('arial', 22)
+final_font = pygame.font.SysFont('arial', 16)
+final_font.set_bold(True)
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -52,7 +58,8 @@ class Player(pygame.sprite.Sprite):
         self.floor = WIN_HEIGHT - FLOOR_HEIGHT
         self.player_level = self.floor - self.surface.get_height()
 
-        self.moving_speed = 10
+        self.hp = 100
+        self.moving_speed = 8
         self.go_to_right = True
         self.vertical_impulse = 0
         self.horizontal_impulse = False
@@ -139,7 +146,7 @@ class Enemy(pygame.sprite.Sprite):
         self.damage_indicator = pygame.transform.scale(
             pygame.image.load(os.path.join(enemy_folder, 'police_damage.png')).convert_alpha(), (120, 200))
 
-        self.moving_speed = randint(2, 4)
+        self.moving_speed = randint(1, 5)
         self.go_to_right = False
         self.hp = 7
         self.attack = False
@@ -147,10 +154,12 @@ class Enemy(pygame.sprite.Sprite):
         self.damage = 0
 
     def hit(self, direction):
+        global KILLS
         self.hp -= 1
         self.damage = 1
         if self.hp == 0:
             self.kill()
+            KILLS += 1
         else:
             self.rect.move_ip(self.moving_speed * randint(5, 15) + 40 if direction else -self.moving_speed * randint(5, 15) - 40, 0)
             pain[randint(0, 3)].play()
@@ -209,16 +218,18 @@ class Boss(pygame.sprite.Sprite):
             pygame.image.load(os.path.join(boss_folder, '5g_tower_attack_mask.png')), (404, 438)))
         self.right_attack_mask = pygame.mask.from_surface(pygame.transform.flip(atc_img, 1, 0))
 
-        self.moving_speed = 8
+        self.moving_speed = 7
         self.go_to_right = False
         self.hp = 30
         self.attack = False
         self.attack_moment = 0
 
     def hit(self, direction):
+        global KILLS
         self.hp -= 1
         if self.hp <= 0:
             self.kill()
+            KILLS += 1
         else:
             self.rect.move_ip(self.moving_speed * randint(5, 15) if direction else -self.moving_speed * randint(5, 15), 0)
 
@@ -257,12 +268,29 @@ class Boss(pygame.sprite.Sprite):
         return self.right_attack_mask if self.go_to_right else self.left_attack_mask
 
 
+class FinalWindow():
+    def __init__(self):
+        global CURRENT_TIME
+        global player
+        global KILLS
+        self.kills = final_font.render(str(KILLS).rjust(11, ' '), 0, (212, 255, 119))
+        self.time = final_font.render(f'{CURRENT_TIME // 60000:02}:{CURRENT_TIME % 60000 // 1000:02}:{CURRENT_TIME % 1000:02}', 0, (212, 255, 119))
+        self.damage = final_font.render(f'{100 - player.hp} hp'.rjust(10, ' '), 0, (212, 255, 119))
+        self.surface = pygame.image.load(os.path.join(img_folder, 'final.png')).convert_alpha()
+        self.rect = self.surface.get_rect(center=(600, 350))
+
+    def update(self):
+        main_surface.blit(self.surface, (450, 0))
+        main_surface.blit(self.time, (655, 346))
+        main_surface.blit(self.kills, (655, 372))
+        main_surface.blit(self.damage, (655, 398))
+
 class Background():
     def __init__(self, images, x, y):
         self.images = images
         self.rect = self.images[0].get_rect()
         self.order = (0, 1, 1, 2, 0, 1, 1, 0, 0, 1, 1, 1, 1)
-        self.moving_speed = 10
+        self.moving_speed = 8
 
         self.first = 0
         self.second = 1
@@ -304,14 +332,12 @@ class Background():
         main_surface.blit(self.images[self.order[self.second]], (self.X2, self.Y2))
 
 
+final_window = None
 background_floor = Background(floor_images, 0, WIN_HEIGHT - FLOOR_HEIGHT)
 background_ceil = Background(ceil_images, 0, 0)
 player = Player()
 
 enemies = pygame.sprite.AbstractGroup()
-activity_distance = [3500, 3600, 6900, 7000, 9800, 10000, 13000, 13100, 18000] 
-
-font = pygame.font.SysFont('arial', 22)
 
 while True:
     for event in pygame.event.get():
@@ -323,53 +349,57 @@ while True:
             if event.key == pygame.K_e:
                 player.start_attack()
 
-    if player.rect.left - player.moving_speed < 0 and DISTANCE > 400 or player.rect.right + player.moving_speed > WIN_WIDTH and DISTANCE < 20000:
-        background_floor.move()
-        background_ceil.move()
-        keys = pygame.key.get_pressed()
-        direction = bool(keys[pygame.K_RIGHT] or not keys[pygame.K_LEFT])
-        motion = bool(keys[pygame.K_LEFT] or keys[pygame.K_RIGHT])
+    if final_window is None:
+        if player.rect.left - player.moving_speed < 0 and DISTANCE > 400 or player.rect.right + player.moving_speed > WIN_WIDTH and DISTANCE < 20000:
+            background_floor.move()
+            background_ceil.move()
+            keys = pygame.key.get_pressed()
+            direction = bool(keys[pygame.K_RIGHT] or not keys[pygame.K_LEFT])
+            motion = bool(keys[pygame.K_LEFT] or keys[pygame.K_RIGHT])
+            for enemy in enemies:
+                enemy.move(direction, motion)
+
+        background_floor.update()
+        background_ceil.update()
+
         for enemy in enemies:
-            enemy.move(direction, motion)
+            enemy.update()
 
-    background_floor.update()
-    background_ceil.update()
+        player.update()
 
-    if activity_distance:
-        if activity_distance[0] - DISTANCE < 200:
-            activity_distance.pop(0)
-            x, y = 1200, 500
-            if len(activity_distance) == 0:
-                enemies.add(Boss(x, 381))
-                pygame.mixer.music.load(os.path.join(music_folder, 'boss_theme.mp3'))
-                pygame.mixer.music.play(-1)
-            else:
-                enemies.add(Enemy(x, y))
-    for enemy in enemies:
-        enemy.update()
+        if activity_distance:
+            if activity_distance[0] - DISTANCE < 200:
+                activity_distance.pop(0)
+                x, y = 1200, 500
+                if len(activity_distance) == 0:
+                    enemies.add(Boss(x, 381))
+                    pygame.mixer.music.load(os.path.join(music_folder, 'boss_theme.mp3'))
+                    pygame.mixer.music.play(-1)
+                else:
+                    enemies.add(Enemy(x, y))
 
-    player.update()
+        dir = 0 if player.go_to_right else 50
+        absolute_pos = DISTANCE - 2 * (WIN_WIDTH - player.rect.centerx - dir)
 
-    dir = 0 if player.go_to_right else 50
-    absolute_pos = DISTANCE - 2 * (WIN_WIDTH - player.rect.centerx - dir)
+        if 6200 > absolute_pos > 6000:
+            main_surface.blit(wanted, (10, 10))
 
-    if 6200 > absolute_pos > 6000:
-        main_surface.blit(wanted, (50, 50))
+        if 100 > absolute_pos > -160:
+            main_surface.blit(trash, (10, 10))
 
-    if 100 > absolute_pos > -160:
-        main_surface.blit(trash, (50, 50))
+        hit_list = pygame.sprite.spritecollide(player, enemies, False)
+        if hit_list and player.attack:
+            for hitted in hit_list:
+                if hitted.get_hitbox().overlap_area(player.get_attack_mask(),
+                                            (player.rect.left-hitted.rect.left, player.rect.top-hitted.rect.top)):
+                    hitted.hit(player.go_to_right)
 
-    hit_list = pygame.sprite.spritecollide(player, enemies, False)
-    if hit_list and player.attack:
-        for hitted in hit_list:
-            if hitted.get_hitbox().overlap_area(player.get_attack_mask(),
-                                          (player.rect.left-hitted.rect.left, player.rect.top-hitted.rect.top)):
-                hitted.hit(player.go_to_right)
+        CURRENT_TIME = pygame.time.get_ticks()
+        if CURRENT_TIME // 1000 == 5:
+            final_window = FinalWindow()
 
-    # Отрисовка времени в правом верхнем углу
-    time = pygame.time.get_ticks()
-    time = font.render(f'Your time is: {time//60000}.{time%60000//1000}.{time%1000}', 1, (0, 0, 0))
-    main_surface.blit(time, (WIN_WIDTH-time.get_width()-10, 10))
+    if final_window:
+        final_window.update()
 
     pygame.display.update()
 
