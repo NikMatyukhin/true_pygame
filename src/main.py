@@ -85,7 +85,6 @@ class Player(pygame.sprite.Sprite):
         self.horizontal_impulse = False
         self.locked = False
 
-        self.hp = 20
         self.attack = False
         self.attack_moment = 0
 
@@ -149,7 +148,7 @@ class Player(pygame.sprite.Sprite):
 
     def hit(self, direction):
         global final_window
-        self.hp -= 1
+        self.hp -= 3
         if self.hp <= 0:
             final_window = FinalWindow()
         else:
@@ -387,9 +386,9 @@ player = Player()
 
 enemies = pygame.sprite.AbstractGroup()
 
-player.locked = False
-
 while True:
+    player.locked = False
+    
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             # pygame.image.save(main_surface, "screenshot.jpg")
@@ -459,7 +458,7 @@ while True:
 
         main_surface.blit(hp_bar_img, (10, 10))
         if player.hp > 0:
-            pygame.draw.rect(main_surface, (240, 10, 10), (13, 13, int(player.hp/20 * 244), 10))
+            pygame.draw.rect(main_surface, (240, 10, 10), (13, 13, int(player.hp/100 * 244), 10))
 
     if final_window:
         final_window.update()
