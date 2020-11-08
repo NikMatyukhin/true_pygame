@@ -34,6 +34,7 @@ pygame.mixer.music.play(-1)
 moap = pygame.mixer.Sound(os.path.join(sound_folder, 'moap.wav'))
 pain = [pygame.mixer.Sound(os.path.join(sound_folder, f'oh{i}.wav')) for i in range (1, 5)]
 
+
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -310,7 +311,7 @@ player = Player()
 enemies = pygame.sprite.AbstractGroup()
 activity_distance = [3500, 3600, 6900, 7000, 9800, 10000, 13000, 13100, 18000] 
 
-font = pygame.font.SysFont('arial', 36)
+font = pygame.font.SysFont('arial', 22)
 
 while True:
     for event in pygame.event.get():
@@ -364,6 +365,11 @@ while True:
             if hitted.get_hitbox().overlap_area(player.get_attack_mask(),
                                           (player.rect.left-hitted.rect.left, player.rect.top-hitted.rect.top)):
                 hitted.hit(player.go_to_right)
+
+    # Отрисовка времени в правом верхнем углу
+    time = pygame.time.get_ticks()
+    time = font.render(f'Your time is: {time//60000}.{time%60000//1000}.{time%1000}', 1, (0, 0, 0))
+    main_surface.blit(time, (WIN_WIDTH-time.get_width()-10, 10))
 
     pygame.display.update()
 
