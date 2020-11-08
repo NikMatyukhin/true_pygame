@@ -78,14 +78,13 @@ class Player(pygame.sprite.Sprite):
         self.floor = WIN_HEIGHT - FLOOR_HEIGHT
         self.player_level = self.floor - self.surface.get_height()
 
-        self.hp = 100
+        self.hp = 20
         self.moving_speed = 8
         self.go_to_right = True
         self.vertical_impulse = 0
         self.horizontal_impulse = False
         self.locked = False
 
-        self.hp = 20
         self.attack = False
         self.attack_moment = 0
 
@@ -152,6 +151,8 @@ class Player(pygame.sprite.Sprite):
         self.hp -= 1
         if self.hp <= 0:
             final_window = FinalWindow()
+            pygame.mixer.music.load(os.path.join(music_folder, 'main_theme.mp3'))
+            pygame.mixer.music.play(-1)
         else:
             self.rect.move_ip(self.moving_speed * randint(1, 5) if direction else -self.moving_speed * randint(1, 5), 0)
 
@@ -267,6 +268,8 @@ class Boss(pygame.sprite.Sprite):
             KILLS += 1
             boss_death.play()
             final_window = FinalWindow()
+            pygame.mixer.music.load(os.path.join(music_folder, 'main_theme.mp3'))
+            pygame.mixer.music.play(-1)
         else:
             self.rect.move_ip(self.moving_speed * randint(5, 15) if direction else -self.moving_speed * randint(5, 15), 0)
             boss_pain[randint(0, 1)].play()
@@ -387,9 +390,9 @@ player = Player()
 
 enemies = pygame.sprite.AbstractGroup()
 
-player.locked = False
-
 while True:
+    player.locked = False
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             # pygame.image.save(main_surface, "screenshot.jpg")
@@ -436,10 +439,10 @@ while True:
         absolute_pos = DISTANCE - 2 * (WIN_WIDTH - player.rect.centerx - dir)
 
         if 6200 > absolute_pos > 6000:
-            main_surface.blit(wanted, (10, 10))
+            main_surface.blit(wanted, (780, 10))
 
         if 100 > absolute_pos > -160:
-            main_surface.blit(trash, (10, 10))
+            main_surface.blit(trash, (780, 10))
 
         hit_list = pygame.sprite.spritecollide(player, enemies, False)
         if hit_list and player.attack:
