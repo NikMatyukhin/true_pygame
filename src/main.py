@@ -24,7 +24,6 @@ main_surface = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 
 floor_images = [pygame.image.load(os.path.join(img_folder, f'new_floor_back_{i}.png')) for i in range(1, 4)]
 ceil_images = [pygame.image.load(os.path.join(img_folder, f'new_ceil_back_{i}.png')) for i in range(1, 4)]
-police_enemy_image = pygame.image.load(os.path.join(enemy_folder, 'police_cut.png')).convert_alpha()
 wanted = pygame.image.load(os.path.join(img_folder, f'разыскивается.png')).convert_alpha()
 trash = pygame.image.load(os.path.join(img_folder, f'урна.png')).convert_alpha()
 
@@ -129,8 +128,10 @@ class Enemy(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
         self.surface = pygame.Surface((120, 200))
-        self.image = pygame.transform.scale(
-            pygame.image.load(os.path.join(enemy_folder, 'police_cut.png')).convert_alpha(), (120, 200))
+        self.all_images = [pygame.transform.scale(pygame.image.load(os.path.join(enemy_folder, f'police_cut_{i}.png')),
+                                                  (120, 200)).convert_alpha() for i in range(1)]
+        print([im.get_width() for im in self.all_images])
+        self.image = self.all_images[0]
         self.rect = self.surface.get_rect(center=(x, y))
         self.left_hitbox = pygame.mask.from_surface(self.image)
         self.right_hitbox = pygame.mask.from_surface(pygame.transform.flip(self.image, 1, 0))
@@ -141,6 +142,7 @@ class Enemy(pygame.sprite.Sprite):
         self.go_to_right = False
         self.hp = 7
         self.attack = False
+        self.attack_moment = 0
         self.damage = 0
 
     def hit(self, direction):
@@ -165,8 +167,18 @@ class Enemy(pygame.sprite.Sprite):
                 self.image = pygame.transform.flip(self.image, 1, 0)
                 self.damage_indicator = pygame.transform.flip(self.damage_indicator, 1, 0)
             self.go_to_right = False
+        if self.go_to_right and player.rect.left <= self.rect.right <= player.rect.right:
+            self.attack = True
+        elif not self.go_to_right and player.rect.left <= self.rect.left <= player.rect.right:
+            self.attack = True
+        if self.attack:
+            self.attack_moment = (self.attack_moment + 1) % 1
+            self.image = self.all_images[self.attack_moment // 2] if not self.go_to_right else pygame.transform.flip(
+                self.all_images[self.attack_moment // 2], 1, 0)
+            if not self.attack_moment:
+                self.attack = False
         main_surface.blit(self.image, self.rect)
-        if self.damage: 
+        if self.damage:
             main_surface.blit(self.damage_indicator, self.rect)
             self.damage += 1
         if self.damage > 4:
@@ -303,6 +315,7 @@ font = pygame.font.SysFont('arial', 36)
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            # pygame.image.save(main_surface, "screenshot.jpg")
             pygame.quit()
             sys.exit()
         if event.type == pygame.KEYDOWN:
