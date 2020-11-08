@@ -24,3 +24,6 @@ venv.bak/
 
 # paint .net files
 src/assets/*.pdn
+
+# our shit
+/src/screenshot.jpg
