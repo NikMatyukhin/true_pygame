@@ -24,6 +24,7 @@ main_surface = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 
 floor_images = [pygame.image.load(os.path.join(img_folder, f'new_floor_back_{i}.png')) for i in range(1, 4)]
 ceil_images = [pygame.image.load(os.path.join(img_folder, f'new_ceil_back_{i}.png')) for i in range(1, 4)]
+hp_bar_img = pygame.image.load(os.path.join(img_folder, f'hpbar.png'))
 wanted = pygame.image.load(os.path.join(img_folder, f'разыскивается.png')).convert_alpha()
 trash = pygame.image.load(os.path.join(img_folder, f'урна.png')).convert_alpha()
 
@@ -49,6 +50,9 @@ pygame.mixer.music.load(os.path.join(music_folder, 'main_theme.mp3'))
 pygame.mixer.music.play(-1)
 moap = pygame.mixer.Sound(os.path.join(sound_folder, 'moap.wav'))
 pain = [pygame.mixer.Sound(os.path.join(sound_folder, f'oh{i}.wav')) for i in range (1, 5)]
+boss_pain = [pygame.mixer.Sound(os.path.join(sound_folder, f'boss_damage_{i}.wav')) for i in range (0, 2)]
+boss_hit = [pygame.mixer.Sound(os.path.join(sound_folder, f'boss_hit_{i}.wav')) for i in range (0, 2)]
+boss_death = pygame.mixer.Sound(os.path.join(sound_folder, f'boss_death.wav'))
 
 
 class Player(pygame.sprite.Sprite):
@@ -248,8 +252,15 @@ class Boss(pygame.sprite.Sprite):
         self.damage = 1
         if self.hp <= 0:
             self.kill()
+            boss_death.play()
         else:
             self.rect.move_ip(self.moving_speed * randint(5, 15) if direction else -self.moving_speed * randint(5, 15), 0)
+            boss_pain[randint(0, 1)].play()
+
+    def start_attack(self):
+        self.attack = True
+        if (a := randint(0, 10)) < 2:
+            boss_hit[a].play()
 
     def update(self):
         global player
@@ -265,7 +276,7 @@ class Boss(pygame.sprite.Sprite):
             self.go_to_right = False
         if player.rect.left <= self.rect.left <= player.rect.right \
                 or player.rect.left <= self.rect.right <= player.rect.right:
-            self.attack = True
+            self.start_attack()
         if self.attack:
             self.attack_moment = (self.attack_moment + 1) % 8
             self.image = self.all_images[self.attack_moment // 2] if not self.go_to_right else pygame.transform.flip(
@@ -406,6 +417,11 @@ while True:
             if hitter.attack and hitter.get_attack_mask().overlap_area(player.get_hitbox(),
                                           (player.rect.left-hitter.rect.left, player.rect.top-hitter.rect.top)):
                 player.hit(hitter.go_to_right)
+
+    # hp bar
+    main_surface.blit(hp_bar_img, (10, 10))
+    if player.hp > 0:
+        pygame.draw.rect(main_surface, (240, 10, 10), (13, 13, int(player.hp/20 * 244), 10))
 
     # Отрисовка времени в правом верхнем углу
     time = pygame.time.get_ticks()
