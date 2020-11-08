@@ -38,7 +38,8 @@ moap = pygame.mixer.Sound(os.path.join(sound_folder, 'moap.wav'))
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.all_images = [pygame.image.load(os.path.join(img_folder, f'player_mop_{i}.png')).convert_alpha() for i in range(1, 9)]
+        self.all_images = [pygame.image.load(os.path.join(img_folder, f'player_mop_{i}.png')).convert_alpha() for i in
+                           range(1, 9)]
         print([im.get_width() for im in self.all_images])
         self.image = self.all_images[0]
         self.surface = pygame.Surface((self.image.get_width(), self.image.get_height()))
@@ -90,7 +91,8 @@ class Player(pygame.sprite.Sprite):
                     self.horizontal_impulse = False
                     self.rect.move_ip(0 if self.go_to_right else -self.moving_speed, self.vertical_impulse)
                 else:
-                    self.rect.move_ip(self.moving_speed if self.go_to_right else -self.moving_speed, self.vertical_impulse)
+                    self.rect.move_ip(self.moving_speed if self.go_to_right else -self.moving_speed,
+                                      self.vertical_impulse)
             else:
                 self.rect.move_ip(0, self.vertical_impulse)
             self.vertical_impulse += 0.98
@@ -105,7 +107,8 @@ class Player(pygame.sprite.Sprite):
             self.attack_moment = (self.attack_moment + 1) % 8
             if self.attack_moment == 5:
                 moap.play()
-            self.image = self.all_images[self.attack_moment] if self.go_to_right else pygame.transform.flip(self.all_images[self.attack_moment], 1, 0)
+            self.image = self.all_images[self.attack_moment] if self.go_to_right else pygame.transform.flip(
+                self.all_images[self.attack_moment], 1, 0)
             if not self.attack_moment:
                 self.attack = False
 
@@ -116,7 +119,8 @@ class Enemy(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
         self.surface = pygame.Surface((120, 200))
-        self.image = pygame.transform.scale(pygame.image.load(os.path.join(enemy_folder, 'police_cut.png')).convert_alpha(), (120, 200))
+        self.image = pygame.transform.scale(
+            pygame.image.load(os.path.join(enemy_folder, 'police_cut.png')).convert_alpha(), (120, 200))
         self.rect = self.surface.get_rect(center=(x, y))
 
         self.moving_speed = 8
@@ -131,6 +135,7 @@ class Enemy(pygame.sprite.Sprite):
         else:
             self.rect.move_ip(self.moving_speed * randint(5, 15) + 40 if direction else -self.moving_speed * randint(5, 15) + 40, 0)
 
+
     def update(self):
         if player.rect.centerx > self.rect.centerx:
             self.rect.move_ip(self.moving_speed, 0)
@@ -144,13 +149,18 @@ class Enemy(pygame.sprite.Sprite):
             self.go_to_right = False
         main_surface.blit(self.image, self.rect)
 
+    def move(self, direction, motion):
+        if motion:
+            self.rect.move_ip(-background_ceil.moving_speed if direction
+                              else background_ceil.moving_speed, 0)
+
 
 class Boss(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
-        self.surface = pygame.Surface((300, 300))
+        self.surface = pygame.Surface((404, 438))
         self.all_images = [pygame.transform.scale(pygame.image.load(os.path.join(boss_folder, f'5g_tower_{i}.png')),
-                                                  (300, 300)).convert_alpha() for i in range(5)]
+                                                  (404, 438)).convert_alpha() for i in range(5)]
         print([im.get_width() for im in self.all_images])
         self.image = self.all_images[0]
         self.rect = self.surface.get_rect(center=(x, y))
@@ -168,6 +178,7 @@ class Boss(pygame.sprite.Sprite):
         else:
             self.rect.move_ip(self.moving_speed * randint(5, 15) if direction else -self.moving_speed * randint(5, 15), 0)
 
+
     def update(self):
         global player
         if player.rect.centerx > self.rect.centerx:
@@ -181,15 +192,21 @@ class Boss(pygame.sprite.Sprite):
                 self.image = pygame.transform.flip(self.image, 1, 0)
             self.go_to_right = False
         if player.rect.left <= self.rect.left <= player.rect.right \
-            or player.rect.left <= self.rect.right <= player.rect.right:
+                or player.rect.left <= self.rect.right <= player.rect.right:
             self.attack = True
         if self.attack:
             self.attack_moment = (self.attack_moment + 1) % 8
             # if self.attack_moment == 2: moap.play()
-            self.image = self.all_images[self.attack_moment//2] if not self.go_to_right else pygame.transform.flip(self.all_images[self.attack_moment//2], 1, 0)
+            self.image = self.all_images[self.attack_moment // 2] if not self.go_to_right else pygame.transform.flip(
+                self.all_images[self.attack_moment // 2], 1, 0)
             if not self.attack_moment:
                 self.attack = False
         main_surface.blit(self.image, self.rect)
+
+    def move(self, direction, motion):
+        if motion:
+            self.rect.move_ip(-background_ceil.moving_speed if direction
+                              else background_ceil.moving_speed, 0)
 
 
 class Background():
@@ -260,6 +277,13 @@ while True:
     if player.rect.left - player.moving_speed < 0 and DISTANCE > 400 or player.rect.right + player.moving_speed > WIN_WIDTH and DISTANCE < 20000:
         background_floor.move()
         background_ceil.move()
+        keys = pygame.key.get_pressed()
+        # 0 - это движение противников вправо, а 1 - влево
+        direction = bool(keys[pygame.K_RIGHT] or not keys[pygame.K_LEFT])
+        # Есть ли движение вообще
+        motion = bool(keys[pygame.K_LEFT] or keys[pygame.K_RIGHT])
+        for enemy in enemies:
+            enemy.move(direction, motion)
 
     background_floor.update()
     background_ceil.update()
@@ -290,7 +314,7 @@ while True:
 
     hit_list = pygame.sprite.spritecollide(player, enemies, False)
     if hit_list and player.attack:
-       for hitted in hit_list:
+        for hitted in hit_list:
             hitted.hit(player.go_to_right)
 
     pygame.display.update()
