@@ -25,7 +25,7 @@ police_enemy_image = pygame.image.load(os.path.join(enemy_folder, 'police_cut.pn
 
 fps_clock = pygame.time.Clock()
 
-pygame.mixer.music.load(os.path.join(sound_folder, 'main_theme.mp3'))
+pygame.mixer.music.load(os.path.join(music_folder, 'main_theme.mp3'))
 pygame.mixer.music.play(-1)
 moap = pygame.mixer.Sound(os.path.join(sound_folder, 'moap.wav'))
 
