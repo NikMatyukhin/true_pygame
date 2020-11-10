@@ -59,12 +59,12 @@ font = pygame.font.SysFont('arial', 22)
 final_font = pygame.font.SysFont('arial', 16)
 final_font.set_bold(True)
 
+
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.all_images = [pygame.image.load(os.path.join(img_folder, f'player_mop_{i}.png')).convert_alpha() for i in
                            range(1, 9)]
-        print([im.get_width() for im in self.all_images])
         self.image = self.all_images[0]
         self.surface = pygame.Surface((self.image.get_width(), self.image.get_height()))
         self.rect = self.surface.get_rect(center=(400, 500))
@@ -166,7 +166,6 @@ class Enemy(pygame.sprite.Sprite):
         super().__init__()
         self.surface = pygame.Surface((174, 200))
         self.all_images = policeman_images
-        print([im.get_width() for im in self.all_images])
         self.image = self.all_images[0]
         self.rect = self.surface.get_rect(center=(x, y))
         self.left_hitbox = pygame.mask.from_surface(self.image)
@@ -240,7 +239,6 @@ class Boss(pygame.sprite.Sprite):
         super().__init__()
         self.surface = pygame.Surface((404, 438))
         self.all_images = boss_images
-        print([im.get_width() for im in self.all_images])
         self.image = self.all_images[0]
         self.rect = self.surface.get_rect(center=(x, y))
         self.left_hitbox = pygame.mask.from_surface(self.image)
@@ -334,6 +332,7 @@ class FinalWindow():
         main_surface.blit(self.kills, (655, 372))
         main_surface.blit(self.damage, (655, 398))
 
+
 class Background():
     def __init__(self, images, x, y):
         self.images = images
@@ -401,14 +400,19 @@ while True:
                 player.start_attack()
 
     if final_window is None:
-        if not enemies and 400 <= DISTANCE < 20000 and player.rect.left > 200 and player.rect.right < WIN_HEIGHT:
+        keys = pygame.key.get_pressed()
+        if not enemies and keys[pygame.K_RIGHT] and 400 <= DISTANCE < 20000 and player.rect.right >= WIN_HEIGHT:
+            background_floor.move()
+            background_ceil.move()
+            player.rect.move_ip(-player.moving_speed, 0)
+            player.locked = True
+        elif not enemies and 400 <= DISTANCE < 20000 and player.rect.left > 200 and player.rect.right < WIN_HEIGHT:
             background_floor.move()
             background_ceil.move()
             player.locked = True
         elif player.rect.left - player.moving_speed < 0 and DISTANCE > 400 or player.rect.right + player.moving_speed > WIN_WIDTH and DISTANCE < 20000:
             background_floor.move()
             background_ceil.move()
-            keys = pygame.key.get_pressed()
             direction = bool(keys[pygame.K_RIGHT] or not keys[pygame.K_LEFT])
             motion = bool(keys[pygame.K_LEFT] or keys[pygame.K_RIGHT])
             for enemy in enemies:
