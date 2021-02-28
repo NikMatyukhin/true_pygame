@@ -1,3 +1,16 @@
+# This version of game based on previous one.
+# Sources created by NikMatyukhin, Timofey-arch, Electro98
+#
+# All things in this version are bad, stupid and unoptimized
+# Thanks
+#
+# TODO:
+# - Platmorms and grounds logic
+# - Players movement logic
+# - Games scene logic/Games screenlogic
+# - Enemies classes
+# - Bosses class
+#
 import pygame
 from settings import *
 from player import Player
