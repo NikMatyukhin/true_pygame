@@ -14,7 +14,8 @@ KILLS = 0
 game_folder = os.path.dirname(__file__)
 img_folder = os.path.join(game_folder, 'assets')
 enemy_folder = os.path.join(img_folder, 'enemies')
-boss_folder = os.path.join(img_folder, '5g_tower')
+boss_folder = os.path.join(img_folder, 'bosses/5g_tower')
+player_folder = os.path.join(img_folder, 'main_hero')
 sound_folder = os.path.join(game_folder, 'sounds')
 music_folder = os.path.join(game_folder, 'music')
 
@@ -22,19 +23,19 @@ pygame.init()
 
 main_surface = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 
-floor_images = [pygame.image.load(os.path.join(img_folder, f'new_floor_back_{i}.png')) for i in range(1, 4)]
-ceil_images = [pygame.image.load(os.path.join(img_folder, f'new_ceil_back_{i}.png')) for i in range(1, 4)]
+floor_images = [pygame.image.load(os.path.join(img_folder, f'backgrounds/new_floor_back_{i}.png')) for i in range(1, 4)]
+ceil_images = [pygame.image.load(os.path.join(img_folder, f'backgrounds/new_ceil_back_{i}.png')) for i in range(1, 4)]
 hp_bar_img = pygame.image.load(os.path.join(img_folder, f'hpbar.png'))
 wanted = pygame.image.load(os.path.join(img_folder, f'разыскивается.png')).convert_alpha()
 trash = pygame.image.load(os.path.join(img_folder, f'урна.png')).convert_alpha()
 
 # предзагрузка ресурсов полицейских
-policeman_images = [pygame.transform.scale(pygame.image.load(os.path.join(enemy_folder, f'police_{i}_frame.png')),
+policeman_images = [pygame.transform.scale(pygame.image.load(os.path.join(enemy_folder, f'policeman/police_{i}_frame.png')),
                                            (174, 200)).convert_alpha() for i in range(9)]
 policeman_attack_mask_image = pygame.transform.scale(
-            pygame.image.load(os.path.join(enemy_folder, 'police_attack_mask.png')), (174, 200))
+            pygame.image.load(os.path.join(enemy_folder, 'policeman/police_attack_mask.png')), (174, 200))
 policeman_damage_indicator = pygame.transform.scale(
-            pygame.image.load(os.path.join(enemy_folder, 'police_damage.png')).convert_alpha(), (174, 200))
+            pygame.image.load(os.path.join(enemy_folder, 'policeman/police_damage.png')).convert_alpha(), (174, 200))
 
 # предзагрузка ресурсов босса
 boss_images = [pygame.transform.scale(pygame.image.load(os.path.join(boss_folder, f'5g_tower_{i}.png')),
@@ -63,14 +64,14 @@ final_font.set_bold(True)
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.all_images = [pygame.image.load(os.path.join(img_folder, f'player_mop_{i}.png')).convert_alpha() for i in
+        self.all_images = [pygame.image.load(os.path.join(player_folder, f'mop/player_mop_{i}.png')).convert_alpha() for i in
                            range(1, 9)]
         self.image = self.all_images[0]
         self.surface = pygame.Surface((self.image.get_width(), self.image.get_height()))
         self.rect = self.surface.get_rect(center=(400, 500))
-        self.right_hitbox = pygame.mask.from_surface(hit_img := pygame.image.load(os.path.join(img_folder, 'player_mop_hitbox.png')))
+        self.right_hitbox = pygame.mask.from_surface(hit_img := pygame.image.load(os.path.join(player_folder, 'mop/player_mop_hitbox.png')))
         self.left_hitbox = pygame.mask.from_surface(pygame.transform.flip(hit_img, 1, 0))
-        self.right_attack_mask = pygame.mask.from_surface(atc_img := pygame.image.load(os.path.join(img_folder, 'player_mop_attack_mask.png')))
+        self.right_attack_mask = pygame.mask.from_surface(atc_img := pygame.image.load(os.path.join(player_folder, 'mop/player_mop_attack_mask.png')))
         self.left_attack_mask = pygame.mask.from_surface(pygame.transform.flip(atc_img, 1, 0))
 
         self.floor = WIN_HEIGHT - FLOOR_HEIGHT
@@ -333,6 +334,7 @@ class FinalWindow():
         main_surface.blit(self.damage, (655, 398))
 
 
+class Background():
     def __init__(self, images, x, y):
         self.images = images
         self.rect = self.images[0].get_rect()

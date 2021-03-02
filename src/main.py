@@ -16,6 +16,7 @@ from settings import *
 from player import Player
 from enemie import Enemie
 from camera import Camera
+from game_world import Game_world
 
 
 def main():
@@ -26,20 +27,23 @@ def main():
 
     start_game(main_camera)
 
+
 def start_game(main_camera):
     fps_clock = pygame.time.Clock()
     font = pygame.font.SysFont('arial', 22)
     player = Player()
     enemie = Enemie(100, 100)
+    world = Game_world(player, enemies=(enemie,))
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 return 0
+
         main_camera.surface.fill((0, 0, 0))
         get_input(player)
-        player.update(main_camera)
-        enemie.update(main_camera)
+        world.update(main_camera)
+
         main_camera.blit(font.render(f'FPS: {fps_clock.get_fps():3.2f}', 0, (200, 255, 200)), (0, 0))
         pygame.display.update()
 
