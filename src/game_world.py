@@ -6,7 +6,7 @@ class Game_world():
         self.platforms = pygame.sprite.Group(*platforms)
         self.bosses = pygame.sprite.Group(*bosses)
         self.enemies = pygame.sprite.Group(*enemies)
-        self.player = player
+        self.player = player.bound_world(self)
 
     def update(self, camera):
         self.platforms.update(camera)

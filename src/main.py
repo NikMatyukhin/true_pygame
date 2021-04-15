@@ -32,7 +32,7 @@ def start_game(main_camera):
     fps_clock = pygame.time.Clock()
     font = pygame.font.SysFont('arial', 22)
     player = Player()
-    enemie = Enemie(100, 100)
+    enemie = Enemie(102, 102)
     world = Game_world(player, enemies=(enemie,))
     while True:
         for event in pygame.event.get():
