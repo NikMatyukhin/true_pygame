@@ -11,6 +11,10 @@ class Camera():
         self.x += x
         self.y += y
 
+    def move_ip(self, x, y):
+        self.x = x
+        self.y = y
+
     def blit_sprite(self, source: pygame.Surface, rect: pygame.Rect, **kwargs):
         self.surface.blit(source, (rect.x - self.x, rect.y - self.y), **kwargs)
 
