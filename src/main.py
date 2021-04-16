@@ -53,13 +53,13 @@ def start_game(main_camera):
 def get_input(player):
     keys = pygame.key.get_pressed()
     if keys[pygame.K_UP]:
-        player.move(0, -50)
+        player.go(0, -10)
     elif keys[pygame.K_DOWN]:
-        player.move(0, 50)
-    elif keys[pygame.K_LEFT]:
-        player.move(-50, 0)
+        player.go(0, 10)
+    if keys[pygame.K_LEFT]:
+        player.go(-10, 0)
     elif keys[pygame.K_RIGHT]:
-        player.move(50, 0)
+        player.go(10, 0)
 
 
 if __name__ == '__main__':
